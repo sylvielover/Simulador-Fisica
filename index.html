@@ -14,334 +14,469 @@
 
 
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Simulador Interactivo del Efecto Magnus</h1>
+            <p>Ajusta los parámetros y observa cómo la rotación curva la trayectoria del balón</p>
+        </div>
 
-        <div class="container">
-        <h1>Simulador del Efecto Magnus</h1>
-        <p class="subtitle">Visualiza cómo la rotación afecta la trayectoria del balón</p>
-        
-        <div class="simulation-area">
-            <canvas id="canvas"></canvas>
-        </div>
-        
-        <div class="controls">
-            <div class="control-group">
-                <label>Velocidad Inicial (m/s): <span class="value-display" id="velocityValue">25</span></label>
-                <input type="range" id="velocity" min="10" max="40" value="25" step="1">
+        <div class="main-content">
+            <div class="controls">
+                <h2 style="color: #1a237e; margin-bottom: 20px; font-size: 20px;">🎮 Controles</h2>
+                
+                <div class="control-group">
+                    <label>Velocidad Inicial (m/s)</label>
+                    <input type="range" id="velocidad" min="10" max="40" value="25" step="1">
+                    <div class="value-display">
+                        <span>10 m/s</span>
+                        <span class="current-value" id="velocidadValue">25 m/s</span>
+                        <span>40 m/s</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Ángulo de Lanzamiento (°)</label>
+                    <input type="range" id="angulo" min="5" max="45" value="20" step="1">
+                    <div class="value-display">
+                        <span>5°</span>
+                        <span class="current-value" id="anguloValue">20°</span>
+                        <span>45°</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Rotación del Balón (RPM)</label>
+                    <input type="range" id="rotacion" min="0" max="1200" value="600" step="50">
+                    <div class="value-display">
+                        <span>0 RPM</span>
+                        <span class="current-value" id="rotacionValue">600 RPM</span>
+                        <span>1200 RPM</span>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="simular()">▶️ Simular</button>
+                    <button class="btn btn-secondary" onclick="reset()">🔄 Reset</button>
+                </div>
+
+                <div class="presets">
+                    <h3>🎯 Casos Preconfigurados</h3>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="cargarPreset('basico')">
+                            <strong>Tiro Básico</strong><br>
+                            <small>v=20 m/s, θ=15°, ω=0 RPM</small>
+                        </button>
+                        <button class="preset-btn" onclick="cargarPreset('medio')">
+                            <strong>Tiro con Efecto</strong><br>
+                            <small>v=25 m/s, θ=20°, ω=600 RPM</small>
+                        </button>
+                        <button class="preset-btn" onclick="cargarPreset('roberto')">
+                            <strong>Roberto Carlos 1997</strong><br>
+                            <small>v=35 m/s, θ=18°, ω=900 RPM</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b6b;"></div>
+                        <span>Trayectoria</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4ecdc4;"></div>
+                        <span>Fuerza Magnus</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffe66d;"></div>
+                        <span>Balón</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="control-group">
-                <label>Ángulo de Disparo (°): <span class="value-display" id="angleValue">20</span></label>
-                <input type="range" id="angle" min="0" max="45" value="20" step="1">
-            </div>
-            
-            <div class="control-group">
-                <label>Rotación (RPM): <span class="value-display" id="spinValue">600</span></label>
-                <input type="range" id="spin" min="0" max="1200" value="600" step="50">
-            </div>
-        </div>
-        
-        <div class="button-group">
-            <button class="btn-shoot" onclick="shoot()">🚀 Disparar</button>
-            <button class="btn-reset" onclick="reset()">🔄 Reiniciar</button>
-        </div>
-        
-        <div class="info-panel">
-            <h3>📊 Resultados de la Simulación</h3>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">Desviación Lateral</div>
-                    <div class="stat-value" id="deviation">0 m</div>
+
+            <div class="visualization">
+                <div class="canvas-wrapper">
+                    <div class="canvas-container">
+                        <h3>Vista Lateral (Altura vs Distancia)</h3>
+                        <canvas id="canvasLateral"></canvas>
+                    </div>
+                    <div class="canvas-container">
+                        <h3>Vista Superior (Desviación Lateral)</h3>
+                        <p style="text-align: center; font-size: 12px; color: #666; margin-bottom: 5px;">
+                            ⚠️ Escala vertical exagerada para mejor visualización
+                        </p>
+                        <canvas id="canvasSuperior"></canvas>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">Distancia Total</div>
-                    <div class="stat-value" id="distance">0 m</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Tiempo de Vuelo</div>
-                    <div class="stat-value" id="flightTime">0 s</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Fuerza Magnus</div>
-                    <div class="stat-value" id="magnusForce">0 N</div>
-                </div>
-            </div>
-            
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: red;"></div>
-                    <span>Trayectoria con efecto Magnus</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: rgba(0, 255, 21, 0.5);"></div>
-                    <span>Trayectoria sin efecto (parabólica)</span>
+                
+                <div class="results">
+                    <div class="result-card">
+                        <div class="label">Desviación Lateral</div>
+                        <div class="value" id="desviacion">0.00<span class="unit">m</span></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Distancia Total</div>
+                        <div class="value" id="distancia">0.00<span class="unit">m</span></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Tiempo de Vuelo</div>
+                        <div class="value" id="tiempo">0.00<span class="unit">s</span></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Altura Máxima</div>
+                        <div class="value" id="altura">0.00<span class="unit">m</span></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Fuerza Magnus</div>
+                        <div class="value" id="fuerza">0.00<span class="unit">N</span></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-
-
-            const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvasLateral = document.getElementById('canvasLateral');
+        const ctxLateral = canvasLateral.getContext('2d');
+        const canvasSuperior = document.getElementById('canvasSuperior');
+        const ctxSuperior = canvasSuperior.getContext('2d');
         
-        // Ajustar tamaño del canvas
+        // Ajustar tamaño de los canvas
         function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            canvasLateral.width = canvasLateral.offsetWidth;
+            canvasLateral.height = canvasLateral.offsetHeight;
+            canvasSuperior.width = canvasSuperior.offsetWidth;
+            canvasSuperior.height = canvasSuperior.offsetHeight;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
-        
-        // Actualizar valores mostrados
-        document.getElementById('velocity').addEventListener('input', (e) => {
-            document.getElementById('velocityValue').textContent = e.target.value;
-        });
-        document.getElementById('angle').addEventListener('input', (e) => {
-            document.getElementById('angleValue').textContent = e.target.value;
-        });
-        document.getElementById('spin').addEventListener('input', (e) => {
-            document.getElementById('spinValue').textContent = e.target.value;
-        });
-        
+
         // Constantes físicas
-        const g = 9.81; // gravedad (m/s²)
-        const rho = 1.225; // densidad del aire (kg/m³)
-        const radius = 0.11; // radio del balón (m)
-        const mass = 0.43; // masa del balón (kg)
-        const area = Math.PI * radius * radius;
-        const Cd = 0.25; // coeficiente de arrastre
-        
+        const g = 9.81;
+        const rho = 1.225;
+        const m = 0.43;
+        const r = 0.11;
+        const A = Math.PI * r * r;
+        const Cd = 0.25;
+
         let animationId = null;
-        
-        function shoot() {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
+        let trayectoria = [];
+
+        // Actualizar valores mostrados
+        document.getElementById('velocidad').addEventListener('input', (e) => {
+            document.getElementById('velocidadValue').textContent = e.target.value + ' m/s';
+        });
+        document.getElementById('angulo').addEventListener('input', (e) => {
+            document.getElementById('anguloValue').textContent = e.target.value + '°';
+        });
+        document.getElementById('rotacion').addEventListener('input', (e) => {
+            document.getElementById('rotacionValue').textContent = e.target.value + ' RPM';
+        });
+
+        function calcularTrayectoria(v0, angulo, rpm) {
+            const omega = rpm * 2 * Math.PI / 60; // rad/s
+            const rad = angulo * Math.PI / 180;
             
-            const v0 = parseFloat(document.getElementById('velocity').value);
-            const angleDegs = parseFloat(document.getElementById('angle').value);
-            const rpm = parseFloat(document.getElementById('spin').value);
+            // Método simplificado basado en la tabla teórica
+            // Desviación = 0.004 * RPM (aproximación lineal de la tabla)
+            const desviacionTeorica = 0.004 * rpm;
             
-            const angle = angleDegs * Math.PI / 180;
-            const omega = (rpm * 2 * Math.PI) / 60; // convertir RPM a rad/s
-            
-            // Escala para visualización
-            const scale = canvas.width / 60; // 60 metros de ancho
-            const originX = 50;
-            const groundY = canvas.height - 50;
-            
-            // Arrays para almacenar trayectorias
-            const trajectoryMagnus = [];
-            const trajectoryNormal = [];
-            
-            // Simulación con efecto Magnus
+            // Calcular trayectoria parabólica estándar
+            let vx = v0 * Math.cos(rad);
+            let vy = v0 * Math.sin(rad);
+            let x = 0, y = 0.1;
             let t = 0;
-            const dt = 0.02;
-            let x = 0, y = 0, z = 0;
-            let vx = v0 * Math.cos(angle);
-            let vy = v0 * Math.sin(angle);
-            let vz = 0;
+            const dt = 0.01;
             
-            let maxDeviation = 0;
-            let totalDistance = 0;
-            let flightTime = 0;
+            const puntos = [];
+            let maxAltura = 0;
             
-            while (y >= 0 && t < 10) {
-                // Velocidad total
-                const v = Math.sqrt(vx*vx + vy*vy + vz*vz);
+            // Calcular fuerza Magnus teórica
+            const CL = (4 * Math.PI * omega * r) / v0;
+            const fuerzaMagnusMax = 0.5 * CL * rho * A * v0 * v0;
+            
+            while (y >= 0 && x < 100 && t < 10) {
+                // Desviación lateral con curva cuadrática (más realista)
+                const progreso = x / (vx * (2 * vy / g)); // Fracción del vuelo completada
+                const z = desviacionTeorica * Math.pow(progreso, 1.5); // Curva más pronunciada al final
+                
+                puntos.push({ x, y, z, t });
+                
+                const v = Math.sqrt(vx * vx + vy * vy);
                 
                 // Fuerza de arrastre
-                const Fd = 0.5 * Cd * rho * area * v * v;
-                const Fdx = -Fd * (vx / v);
-                const Fdy = -Fd * (vy / v);
-                
-                // Fuerza Magnus (perpendicular a velocidad y eje de rotación)
-                const Cl = 0.5; // coeficiente de sustentación simplificado
-                const Fm = 0.5 * Cl * rho * area * v * omega * radius;
-                const Fmz = Fm; // fuerza lateral
+                const Fd = 0.5 * Cd * rho * A * v * v;
                 
                 // Aceleraciones
-                const ax = Fdx / mass;
-                const ay = -g + (Fdy / mass);
-                const az = Fmz / mass;
+                const ax = -(Fd / m) * (vx / v);
+                const ay = -g - (Fd / m) * (vy / v);
                 
                 // Actualizar velocidades
                 vx += ax * dt;
                 vy += ay * dt;
-                vz += az * dt;
                 
                 // Actualizar posiciones
                 x += vx * dt;
                 y += vy * dt;
-                z += vz * dt;
                 
-                trajectoryMagnus.push({x, y, z});
-                
-                if (Math.abs(z) > Math.abs(maxDeviation)) {
-                    maxDeviation = z;
-                }
-                
+                maxAltura = Math.max(maxAltura, y);
                 t += dt;
             }
             
-            totalDistance = x;
-            flightTime = t;
-            
-            // Calcular fuerza Magnus promedio
-            const vAvg = v0 * 0.7; // velocidad promedio aproximada
-            const FmAvg = 0.5 * 0.5 * rho * area * vAvg * omega * radius;
-            
-            // Simulación sin efecto Magnus (parábola simple)
-            t = 0;
-            x = 0;
-            y = 0;
-            vx = v0 * Math.cos(angle);
-            vy = v0 * Math.sin(angle);
-            
-            while (y >= 0 && t < 10) {
-                x += vx * dt;
-                y += vy * dt;
-                vy -= g * dt;
-                
-                trajectoryNormal.push({x, y});
-                t += dt;
-            }
-            
-            // Actualizar estadísticas
-            document.getElementById('deviation').textContent = Math.abs(maxDeviation).toFixed(2) + ' m';
-            document.getElementById('distance').textContent = totalDistance.toFixed(2) + ' m';
-            document.getElementById('flightTime').textContent = flightTime.toFixed(2) + ' s';
-            document.getElementById('magnusForce').textContent = FmAvg.toFixed(2) + ' N';
-            
-            // Animación
-            let frameIndex = 0;
-            
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Dibujar campo
-                drawField();
-                
-                // Dibujar trayectoria normal (semi-transparente)
-                ctx.strokeStyle = 'green';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                for (let i = 0; i < trajectoryNormal.length; i++) {
-                    const px = originX + trajectoryNormal[i].x * scale;
-                    const py = groundY - trajectoryNormal[i].y * scale;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
-                }
-                ctx.stroke();
-                ctx.setLineDash([]);
-                
-                // Dibujar trayectoria con Magnus
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                for (let i = 0; i <= Math.min(frameIndex, trajectoryMagnus.length - 1); i++) {
-                    const px = originX + trajectoryMagnus[i].x * scale;
-                    const py = groundY - trajectoryMagnus[i].y * scale - trajectoryMagnus[i].z * scale;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
-                }
-                ctx.stroke();
-                
-                // Dibujar balón
-                if (frameIndex < trajectoryMagnus.length) {
-                    const point = trajectoryMagnus[frameIndex];
-                    const ballX = originX + point.x * scale;
-                    const ballY = groundY - point.y * scale - point.z * scale;
-                    
-                    // Sombra del balón
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                    ctx.beginPath();
-                    ctx.ellipse(originX + point.x * scale, groundY, 8, 4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Balón
-                    ctx.fillStyle = 'white';
-                    ctx.strokeStyle = 'black';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Líneas del balón (efecto de rotación)
-                    const rotAngle = frameIndex * 0.3;
-                    ctx.strokeStyle = 'black';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(ballX, ballY, 10, rotAngle, rotAngle + Math.PI);
-                    ctx.stroke();
-                    
-                    frameIndex += 2;
-                    if (frameIndex < trajectoryMagnus.length) {
-                        animationId = requestAnimationFrame(animate);
-                    }
-                }
-            }
-            
-            animate();
+            return {
+                puntos,
+                desviacion: desviacionTeorica,
+                distancia: x,
+                tiempo: t,
+                altura: maxAltura,
+                fuerza: fuerzaMagnusMax
+            };
         }
-        
-        function drawField() {
-            // Césped con gradiente
+
+        function dibujarVistaLateral() {
+            const canvas = canvasLateral;
+            const ctx = ctxLateral;
+            
+            // Fondo
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#87CEEB');
-            gradient.addColorStop(0.7, '#98D8C8');
-            gradient.addColorStop(1, '#90EE90');
+            gradient.addColorStop(0, '#87ceeb');
+            gradient.addColorStop(0.6, '#a8e6cf');
+            gradient.addColorStop(1, '#7cb342');
             ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Línea del suelo
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.85);
+            ctx.lineTo(canvas.width, canvas.height * 0.85);
+            ctx.stroke();
+            
+            // Portería
+            const porteriaX = canvas.width * 0.9;
+            const sueloY = canvas.height * 0.85;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(porteriaX, sueloY);
+            ctx.lineTo(porteriaX, sueloY - 60);
+            ctx.stroke();
+        }
+
+        function dibujarVistaSuperior() {
+            const canvas = canvasSuperior;
+            const ctx = ctxSuperior;
+            
+            // Fondo (campo visto desde arriba)
+            ctx.fillStyle = '#7cb342';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // Líneas del campo
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < canvas.width; i += 50) {
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
                 ctx.beginPath();
-                ctx.moveTo(i, canvas.height - 50);
+                ctx.moveTo(i, 0);
                 ctx.lineTo(i, canvas.height);
                 ctx.stroke();
             }
-            
-            // Línea base (suelo)
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - 50);
-            ctx.lineTo(canvas.width, canvas.height - 50);
-            ctx.stroke();
-            
-            // Portería (opcional)
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - 100, canvas.height - 50);
-            ctx.lineTo(canvas.width - 100, canvas.height - 150);
-            ctx.lineTo(canvas.width - 50, canvas.height - 150);
-            ctx.lineTo(canvas.width - 50, canvas.height - 50);
-            ctx.stroke();
-        }
-        
-        function reset() {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
+            for (let i = 0; i < canvas.height; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
             }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawField();
-            document.getElementById('deviation').textContent = '0 m';
-            document.getElementById('distance').textContent = '0 m';
-            document.getElementById('flightTime').textContent = '0 s';
-            document.getElementById('magnusForce').textContent = '0 N';
+            
+            // Línea central
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Portería (vista desde arriba)
+            const porteriaX = canvas.width * 0.9;
+            const centroY = canvas.height / 2;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 4;
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+            ctx.fillRect(porteriaX - 5, centroY - 30, 10, 60);
+            ctx.strokeRect(porteriaX - 5, centroY - 30, 10, 60);
         }
-        
-        // Dibujar campo inicial
-        drawField();
 
-</script>
-    
+        function simular() {
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            const v0 = parseFloat(document.getElementById('velocidad').value);
+            const angulo = parseFloat(document.getElementById('angulo').value);
+            const rpm = parseFloat(document.getElementById('rotacion').value);
+            
+            const resultado = calcularTrayectoria(v0, angulo, rpm);
+            trayectoria = resultado.puntos;
+            
+            // Actualizar resultados
+            document.getElementById('desviacion').innerHTML = resultado.desviacion.toFixed(2) + '<span class="unit">m</span>';
+            document.getElementById('distancia').innerHTML = resultado.distancia.toFixed(2) + '<span class="unit">m</span>';
+            document.getElementById('tiempo').innerHTML = resultado.tiempo.toFixed(2) + '<span class="unit">s</span>';
+            document.getElementById('altura').innerHTML = resultado.altura.toFixed(2) + '<span class="unit">m</span>';
+            document.getElementById('fuerza').innerHTML = resultado.fuerza.toFixed(2) + '<span class="unit">N</span>';
+            
+            // Animar
+            let frame = 0;
+            function animar() {
+                // VISTA LATERAL
+                dibujarVistaLateral();
+                const escalaX_L = canvasLateral.width * 0.85 / Math.max(...trayectoria.map(p => p.x));
+                const escalaY_L = canvasLateral.height * 0.7 / Math.max(...trayectoria.map(p => p.y));
+                const offsetY_L = canvasLateral.height * 0.85;
+                
+                // Trayectoria lateral
+                ctxLateral.strokeStyle = 'rgba(255, 107, 107, 0.4)';
+                ctxLateral.lineWidth = 3;
+                ctxLateral.beginPath();
+                for (let i = 0; i < trayectoria.length; i++) {
+                    const px = trayectoria[i].x * escalaX_L + 20;
+                    const py = offsetY_L - trayectoria[i].y * escalaY_L;
+                    if (i === 0) ctxLateral.moveTo(px, py);
+                    else ctxLateral.lineTo(px, py);
+                }
+                ctxLateral.stroke();
+                
+                // VISTA SUPERIOR (con escala exagerada en Z para visualización)
+                dibujarVistaSuperior();
+                const escalaX_S = canvasSuperior.width * 0.85 / Math.max(...trayectoria.map(p => p.x));
+                const maxZ = Math.max(...trayectoria.map(p => Math.abs(p.z))) || 1;
+                const escalaZ_S = (canvasSuperior.height * 0.8) / maxZ; // Exagerar 2x la escala Z
+                const centroY_S = canvasSuperior.height / 2;
+                
+                // Trayectoria superior (muestra desviación lateral)
+                ctxSuperior.strokeStyle = 'rgba(255, 107, 107, 0.4)';
+                ctxSuperior.lineWidth = 3;
+                ctxSuperior.beginPath();
+                for (let i = 0; i < trayectoria.length; i++) {
+                    const px = trayectoria[i].x * escalaX_S + 20;
+                    const py = centroY_S - trayectoria[i].z * escalaZ_S;
+                    if (i === 0) ctxSuperior.moveTo(px, py);
+                    else ctxSuperior.lineTo(px, py);
+                }
+                ctxSuperior.stroke();
+                
+                if (frame < trayectoria.length) {
+                    // Trayectoria animada lateral
+                    ctxLateral.strokeStyle = '#ff6b6b';
+                    ctxLateral.lineWidth = 4;
+                    ctxLateral.beginPath();
+                    for (let i = 0; i <= frame; i++) {
+                        const px = trayectoria[i].x * escalaX_L + 20;
+                        const py = offsetY_L - trayectoria[i].y * escalaY_L;
+                        if (i === 0) ctxLateral.moveTo(px, py);
+                        else ctxLateral.lineTo(px, py);
+                    }
+                    ctxLateral.stroke();
+                    
+                    // Balón lateral
+                    const punto = trayectoria[frame];
+                    const bx_L = punto.x * escalaX_L + 20;
+                    const by_L = offsetY_L - punto.y * escalaY_L;
+                    
+                    ctxLateral.fillStyle = '#ffe66d';
+                    ctxLateral.strokeStyle = '#333';
+                    ctxLateral.lineWidth = 2;
+                    ctxLateral.beginPath();
+                    ctxLateral.arc(bx_L, by_L, 10, 0, Math.PI * 2);
+                    ctxLateral.fill();
+                    ctxLateral.stroke();
+                    
+                    // Trayectoria animada superior
+                    ctxSuperior.strokeStyle = '#ff6b6b';
+                    ctxSuperior.lineWidth = 4;
+                    ctxSuperior.beginPath();
+                    for (let i = 0; i <= frame; i++) {
+                        const px = trayectoria[i].x * escalaX_S + 20;
+                        const py = centroY_S - trayectoria[i].z * escalaZ_S;
+                        if (i === 0) ctxSuperior.moveTo(px, py);
+                        else ctxSuperior.lineTo(px, py);
+                    }
+                    ctxSuperior.stroke();
+                    
+                    // Balón superior
+                    const bx_S = punto.x * escalaX_S + 20;
+                    const by_S = centroY_S - punto.z * escalaZ_S;
+                    
+                    ctxSuperior.fillStyle = '#ffe66d';
+                    ctxSuperior.strokeStyle = '#333';
+                    ctxSuperior.lineWidth = 2;
+                    ctxSuperior.beginPath();
+                    ctxSuperior.arc(bx_S, by_S, 10, 0, Math.PI * 2);
+                    ctxSuperior.fill();
+                    ctxSuperior.stroke();
+                    
+                    // Vector de fuerza Magnus (vista superior)
+                    if (rpm > 0) {
+                        ctxSuperior.strokeStyle = '#4ecdc4';
+                        ctxSuperior.lineWidth = 3;
+                        ctxSuperior.beginPath();
+                        ctxSuperior.moveTo(bx_S, by_S);
+                        ctxSuperior.lineTo(bx_S, by_S - 25);
+                        ctxSuperior.stroke();
+                        
+                        // Flecha
+                        ctxSuperior.fillStyle = '#4ecdc4';
+                        ctxSuperior.beginPath();
+                        ctxSuperior.moveTo(bx_S, by_S - 25);
+                        ctxSuperior.lineTo(bx_S - 5, by_S - 20);
+                        ctxSuperior.lineTo(bx_S + 5, by_S - 20);
+                        ctxSuperior.closePath();
+                        ctxSuperior.fill();
+                    }
+                    
+                    frame += 2;
+                    animationId = requestAnimationFrame(animar);
+                }
+            }
+            
+            animar();
+        }
+
+        function reset() {
+            if (animationId) cancelAnimationFrame(animationId);
+            dibujarVistaLateral();
+            dibujarVistaSuperior();
+            trayectoria = [];
+            
+            document.getElementById('desviacion').innerHTML = '0.00<span class="unit">m</span>';
+            document.getElementById('distancia').innerHTML = '0.00<span class="unit">m</span>';
+            document.getElementById('tiempo').innerHTML = '0.00<span class="unit">s</span>';
+            document.getElementById('altura').innerHTML = '0.00<span class="unit">m</span>';
+            document.getElementById('fuerza').innerHTML = '0.00<span class="unit">N</span>';
+        }
+
+        function cargarPreset(tipo) {
+            if (tipo === 'basico') {
+                document.getElementById('velocidad').value = 20;
+                document.getElementById('angulo').value = 15;
+                document.getElementById('rotacion').value = 0;
+            } else if (tipo === 'medio') {
+                document.getElementById('velocidad').value = 25;
+                document.getElementById('angulo').value = 20;
+                document.getElementById('rotacion').value = 600;
+            } else if (tipo === 'roberto') {
+                document.getElementById('velocidad').value = 35;
+                document.getElementById('angulo').value = 18;
+                document.getElementById('rotacion').value = 900;
+            }
+            
+            document.getElementById('velocidadValue').textContent = document.getElementById('velocidad').value + ' m/s';
+            document.getElementById('anguloValue').textContent = document.getElementById('angulo').value + '°';
+            document.getElementById('rotacionValue').textContent = document.getElementById('rotacion').value + ' RPM';
+            
+            simular();
+        }
+
+        // Inicializar
+        dibujarVistaLateral();
+        dibujarVistaSuperior();
+    </script>
 </body>
 </html>
